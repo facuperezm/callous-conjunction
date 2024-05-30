@@ -8,7 +8,7 @@ import "@fontsource/poppins";
   import OpenAI from "openai";
 
   const form = document.querySelector("form");
-  const text = document.querySelector("textarea");
+  const textArea = document.querySelector("textarea");
   const languageInputs = document.querySelectorAll(
     'input[name="language"]',
   ) as NodeListOf<HTMLInputElement>;
@@ -28,10 +28,10 @@ import "@fontsource/poppins";
         return input.value;
       }
     }
-    return null; // or handle the case when no language is selected
+    return null;
   };
 
-  const translate = async (language: string | null, text: string) => {
+  const translate = async (language: string, text: string): Promise<string> => {
     const client = new OpenAI({
       apiKey: import.meta.env.PUBLIC_OPENAI_API_KEY,
       dangerouslyAllowBrowser: true,
@@ -55,13 +55,49 @@ import "@fontsource/poppins";
     const responsefromai = response.choices[0].message.content;
     translatedText!.innerText = responsefromai!;
     originalText!.innerText = text!.valueOf();
+    return responsefromai!;
   };
 
   form?.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const selectedLanguage = getSelectedLanguage();
-    await translate(selectedLanguage, text!.value);
+    if (!selectedLanguage) {
+      return;
+    }
+
+    const textValue = textArea!.value;
+    if (!textValue) {
+      alert("Please enter some text to translate.");
+      return;
+    }
+
+    try {
+      const translated = await translate(selectedLanguage, textValue);
+
+      originalText.value = textValue;
+      translatedText.value = translated;
+
+      wrapperForm?.classList.add("hidden");
+      wrapperResponse?.classList.remove("hidden");
+    } catch (error) {
+      console.error("Translation error:", error);
+      alert("An error occurred during translation. Please try again.");
+    }
+  });
+
+  const resetBtn = document.querySelector(".reset-btn");
+  resetBtn?.addEventListener("click", () => {
+    wrapperForm?.classList.remove("hidden");
+    wrapperResponse?.classList.add("hidden");
+    textArea!.value = "";
+    translatedText.value = "";
+    originalText.value = "";
+
+    for (const input of languageInputs) {
+      input.checked = false;
+    }
+    textArea!.focus();
   });
 </script>
 <Layout title="AI Translations">
@@ -130,7 +166,7 @@ import "@fontsource/poppins";
             >Translate</button
           >
         </div>
-        <div class="wrapper-response">
+        <div class="wrapper-response hidden">
           <h3
             class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]"
           >
@@ -147,6 +183,11 @@ import "@fontsource/poppins";
           <textarea
             class="translated-text w-full rounded-lg bg-[#EFF0F4] p-4"
             disabled></textarea>
+
+          <button
+            class="reset-btn mb-2 mt-4 w-full rounded-md bg-[#035A9D] p-2 text-center font-sans text-2xl font-bold text-white"
+            >Start over</button
+          >
         </div>
       </form>
     </section>
