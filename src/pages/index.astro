@@ -4,9 +4,73 @@ import "@fontsource-variable/big-shoulders-display";
 import "@fontsource/poppins";
 ---
 
+<script>
+  import OpenAI from "openai";
+
+  const form = document.querySelector("form");
+  const text = document.querySelector("textarea");
+  const languageInputs = document.querySelectorAll(
+    'input[name="language"]',
+  ) as NodeListOf<HTMLInputElement>;
+
+  const wrapperForm = document.querySelector(".wrapper-form");
+  const wrapperResponse = document.querySelector(".wrapper-response");
+  const translatedText = document.querySelector(
+    ".translated-text",
+  ) as HTMLTextAreaElement;
+  const originalText = document.querySelector(
+    ".original-text",
+  ) as HTMLTextAreaElement;
+
+  const getSelectedLanguage = () => {
+    for (const input of languageInputs) {
+      if (input.checked) {
+        return input.value;
+      }
+    }
+    return null; // or handle the case when no language is selected
+  };
+
+  const translate = async (language: string | null, text: string) => {
+    const client = new OpenAI({
+      apiKey: import.meta.env.PUBLIC_OPENAI_API_KEY,
+      dangerouslyAllowBrowser: true,
+    });
+
+    const response = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are going to be a translator for PollyGlot, my AI application. You know how to translate from any language to French, Japanse and Spanish with no problems. Please in your response do not reply with anything else other than the translation itself, no greetings, no extra words.",
+        },
+        {
+          role: "user",
+          content: `Translate the following text to ${language}: ${text}`,
+        },
+      ],
+    });
+
+    const responsefromai = response.choices[0].message.content;
+    translatedText!.innerText = responsefromai!;
+    originalText!.innerText = text!.valueOf();
+  };
+
+  form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const selectedLanguage = getSelectedLanguage();
+    await translate(selectedLanguage, text!.value);
+  });
+</script>
 <Layout title="AI Translations">
   <header class="relative bg-[#0D182E]">
-    <img src="/world.png" alt="World" class="absolute inset-y-0 right-0" />
+    <img
+      src="/world.png"
+      alt="World"
+      class="absolute inset-y-0 right-0 h-full object-cover"
+    />
     <div class="flex items-center justify-center gap-4 py-20">
       <img src="/parrot.png" alt="PollyGlot" class="" />
       <div class="z-10">
@@ -19,57 +83,71 @@ import "@fontsource/poppins";
       </div>
     </div>
   </header>
-  <main class="p-4">
+  <main class="mx-auto max-w-2xl p-4">
     <section class="rounded-2xl border-4 border-[#252F42] p-3">
-      <h3 class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]">
-        Text to translate 👇
-      </h3>
-      <form action="">
-        <textarea
-          name="text"
-          placeholder="How are you?"
-          class="w-full rounded-lg bg-[#EFF0F4] p-4"></textarea>
-        <div class="mx-auto max-w-sm text-xl">
-          <p
+      <form>
+        <div class="wrapper-form">
+          <h3
             class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]"
           >
-            Select language 👇
-          </p>
-          <div>
-            <input
-              type="radio"
-              id="french"
-              name="drone"
-              value="french"
-              checked
-            />
-            <label for="french">French 🇫🇷</label>
+            Text to translate 👇
+          </h3>
+          <textarea
+            name="text"
+            placeholder="How are you?"
+            class="w-full rounded-lg bg-[#EFF0F4] p-4"></textarea>
+          <div class="mx-auto max-w-sm text-xl">
+            <p
+              class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]"
+            >
+              Select language 👇
+            </p>
+            <div>
+              <input type="radio" id="french" name="language" value="french" />
+              <label for="french">French 🇫🇷</label>
+            </div>
+            <div>
+              <input
+                type="radio"
+                id="spanish"
+                name="language"
+                value="spanish"
+              />
+              <label for="spanish">Spanish 🇪🇸</label>
+            </div>
+            <div>
+              <input
+                type="radio"
+                id="japanese"
+                name="language"
+                value="japanese"
+              />
+              <label for="japanese">Japanese 🇯🇵</label>
+            </div>
           </div>
-          <div>
-            <input
-              type="radio"
-              id="spanish"
-              name="drone"
-              value="spanish"
-              checked
-            />
-            <label for="spanish">Spanish 🇪🇸</label>
-          </div>
-          <div>
-            <input
-              type="radio"
-              id="japanese"
-              name="drone"
-              value="japanese"
-              checked
-            />
-            <label for="japanese">Japanese 🇯🇵</label>
-          </div>
+          <button
+            class="mb-2 mt-4 w-full rounded-md bg-[#035A9D] p-2 text-center font-sans text-2xl font-bold text-white"
+            >Translate</button
+          >
         </div>
-        <button
-          class="mb-2 mt-4 w-full rounded-md bg-[#035A9D] p-2 text-center font-sans text-2xl font-bold text-white"
-          >Translate</button
-        >
+        <div class="wrapper-response">
+          <h3
+            class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]"
+          >
+            Original text 👇
+          </h3>
+          <textarea
+            class="original-text w-full rounded-lg bg-[#EFF0F4] p-4"
+            disabled></textarea>
+          <h3
+            class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]"
+          >
+            Your translation 👇
+          </h3>
+          <textarea
+            class="translated-text w-full rounded-lg bg-[#EFF0F4] p-4"
+            disabled></textarea>
+        </div>
       </form>
     </section>
   </main>
