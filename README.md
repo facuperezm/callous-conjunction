@@ -1,4 +1,4 @@
-# PollyGlot
+# PollyGlot Translator
 
 ![App Screenshot](/public/screenshot.png)
 
