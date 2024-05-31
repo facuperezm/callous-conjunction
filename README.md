@@ -2,17 +2,19 @@
 
 ![App Screenshot](/public/screenshot.png)
 
-PollyGlot is an AI project designed for providing accurate translations. Built with HTML, CSS, and JavaScript, this project leverages Astro and integrates the latest GPT-4o model from OpenAI to deliver high-quality translation. Try it out!
+PollyGlot is an AI project designed to provide accurate translations. Built with HTML, CSS, and JavaScript, this project leverages Astro and integrates the latest GPT-4o model from OpenAI to deliver high-quality translation. Try it out!
 
 ## Table of Contents
 
+- [Challenges](#challenges)
 - [Tech Stack](#tech-stack)
 - [Environment Variables](#environment-variables)
-- [Optimizations](#optimizations)
-- [Challenges](#challenges)
-- [Screenshots](#screenshots)
-- [Acknowledgements](#acknowledgements)
 - [How to Download and Run the Project](#how-to-download-and-run-the-project)
+- [Acknowledgements](#acknowledgements)
+
+## Challenges
+
+Learning to use the OpenAI API with different large language models (LLMs) has been a significant challenge and a great learning experience. Managing the temperature settings and selecting the appropriate model for different purposes has been an interesting challenge. Additionally, understanding the importance of tokens and their management has been crucial in optimizing the performance and cost-efficiency of the translations.
 
 ## Tech Stack
 
@@ -26,20 +28,6 @@ PollyGlot is an AI project designed for providing accurate translations. Built w
 To run this project, you will need to add the following environment variable to your `.env` file:
 
 - `OPENAI_API_KEY`
-
-## Optimizations
-
-The project includes various optimizations such as refactors for cleaner code, performance improvements for faster load times, and enhanced accessibility features.
-
-## Challenges
-
-Learning to use the OpenAI API with different large language models (LLMs) has been a significant challenge and a great learning experience. Managing the temperature settings and selecting the appropriate model for different purposes has been intricate. Additionally, understanding the importance of tokens and their management has been crucial in optimizing the performance and cost-efficiency of the translations.
-
-## Acknowledgements
-
-- [Scrimba](https://scrimba.com/)
-- [OpenAI](https://openai.com/)
-- [Astro](https://astro.build/)
 
 ## How to Download and Run the Project
 
@@ -63,6 +51,12 @@ To get a local copy up and running, follow these steps:
    pnpm dev
    ```
 6. Open your browser and go to `http://localhost:3000/` to view the app.
+
+## Acknowledgements
+
+- [Scrimba](https://scrimba.com/)
+- [OpenAI](https://openai.com/)
+- [Astro](https://astro.build/)
 
 ### Thanks for reading!
 
