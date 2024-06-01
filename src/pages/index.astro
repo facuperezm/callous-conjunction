@@ -140,11 +140,6 @@ import "@fontsource/poppins";
   };
 
   async function translate(language: string, text: string): Promise<string> {
-    const client = new OpenAI({
-      apiKey: import.meta.env.PUBLIC_OPENAI_API_KEY,
-      dangerouslyAllowBrowser: true,
-    });
-
     const response = await client.chat.completions.create({
       model: "gpt-4o",
       messages: [
