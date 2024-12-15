@@ -1,0 +1,188 @@
+---
+import { SUPPORTED_LANGUAGES } from "../constants/translations";
+---
+
+<section class="rounded-2xl border-4 border-[#252F42] p-3">
+  <form>
+    <div class="wrapper-form">
+      <h3 class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]">
+        Text to translate 👇
+      </h3>
+      <textarea
+        name="text"
+        placeholder="How are you?"
+        class="w-full rounded-lg bg-[#EFF0F4] p-4"></textarea>
+      <div class="mx-auto text-xl">
+        <p class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]">
+          Select language 👇
+        </p>
+        <div class="mx-auto max-w-56 md:max-w-md">
+          {
+            SUPPORTED_LANGUAGES.map(({ id, label }) => (
+              <div>
+                <input type="radio" id={id} name="language" value={id} />
+                <label for={id}>{label}</label>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+      <button
+        class="mb-2 mt-4 w-full rounded-md bg-[#035A9D] p-2 text-center font-sans text-2xl font-bold text-white"
+      >
+        Translate
+      </button>
+    </div>
+    <div class="loading-translation hidden">
+      <h3 class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]">
+        Translation in progress...
+      </h3>
+      <img
+        src="/loading.svg"
+        alt="Loading"
+        class="animate- mx-auto w-1/2 max-w-xs"
+      />
+    </div>
+    <div class="wrapper-response hidden">
+      <h3 class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]">
+        Original text 👇
+      </h3>
+      <textarea
+        class="original-text w-full rounded-lg bg-[#EFF0F4] p-4"
+        disabled></textarea>
+      <h3 class="py-4 text-center font-sans text-2xl font-bold text-[#035A9D]">
+        Your translation 👇
+      </h3>
+      <textarea
+        class="translated-text w-full rounded-lg bg-[#EFF0F4] p-4"
+        disabled></textarea>
+    </div>
+  </form>
+  <button
+    class="reset-btn mb-2 mt-4 hidden w-full rounded-md bg-[#035A9D] p-2 text-center font-sans text-2xl font-bold text-white"
+  >
+    Start over
+  </button>
+</section>
+
+<script>
+  import OpenAI from "openai";
+  import { SYSTEM_PROMPT } from "../constants/translations";
+  import type { SupportedLanguage } from "../constants/translations";
+
+  const openai = new OpenAI({
+    apiKey: import.meta.env.OPENAI_API_KEY,
+    dangerouslyAllowBrowser: true,
+  });
+
+  const elements = {
+    form: document.querySelector("form"),
+    textArea: document.querySelector("textarea"),
+    languageInputs: document.querySelectorAll(
+      'input[name="language"]',
+    ) as NodeListOf<HTMLInputElement>,
+    wrapperForm: document.querySelector(".wrapper-form"),
+    wrapperResponse: document.querySelector(".wrapper-response"),
+    loadingTranslation: document.querySelector(".loading-translation"),
+    resetBtn: document.querySelector(".reset-btn") as HTMLButtonElement,
+    translatedText: document.querySelector(
+      ".translated-text",
+    ) as HTMLTextAreaElement,
+    originalText: document.querySelector(
+      ".original-text",
+    ) as HTMLTextAreaElement,
+  };
+
+  const getSelectedLanguage = (): SupportedLanguage | null => {
+    const selectedInput = Array.from(elements.languageInputs).find(
+      (input) => input.checked,
+    );
+    return (selectedInput?.value as SupportedLanguage) || null;
+  };
+
+  const showError = (message: string) => {
+    alert(message);
+    elements.wrapperForm?.classList.remove("hidden");
+    elements.loadingTranslation?.classList.add("hidden");
+  };
+
+  async function translate(
+    language: SupportedLanguage,
+    text: string,
+  ): Promise<string> {
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-4",
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Translate the following text to ${language}: ${text}`,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      const translation = response.choices[0]?.message?.content;
+      if (!translation) {
+        throw new Error("No translation received from the API");
+      }
+
+      return translation;
+    } catch (error) {
+      console.error("Translation API error:", error);
+      throw new Error("Failed to get translation. Please try again.");
+    }
+  }
+
+  const resetForm = () => {
+    elements.wrapperForm?.classList.remove("hidden");
+    elements.loadingTranslation?.classList.add("hidden");
+    elements.wrapperResponse?.classList.add("hidden");
+    elements.textArea && (elements.textArea.value = "");
+    elements.translatedText && (elements.translatedText.value = "");
+    elements.originalText && (elements.originalText.value = "");
+    elements.resetBtn?.classList.add("hidden");
+    elements.languageInputs.forEach((input) => (input.checked = false));
+    elements.textArea?.focus();
+  };
+
+  elements.form?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const selectedLanguage = getSelectedLanguage();
+    if (!selectedLanguage) {
+      showError("Please select a language to translate to.");
+      return;
+    }
+
+    const textValue = elements.textArea?.value?.trim();
+    if (!textValue) {
+      showError("Please enter text to translate.");
+      return;
+    }
+
+    elements.wrapperForm?.classList.add("hidden");
+    elements.loadingTranslation?.classList.remove("hidden");
+
+    try {
+      const translated = await translate(selectedLanguage, textValue);
+
+      if (elements.originalText) elements.originalText.value = textValue;
+      if (elements.translatedText) elements.translatedText.value = translated;
+
+      setTimeout(() => {
+        elements.loadingTranslation?.classList.add("hidden");
+        elements.wrapperResponse?.classList.remove("hidden");
+        elements.resetBtn?.classList.remove("hidden");
+      }, 1500); // Reduced from 3000ms for better UX
+    } catch (error) {
+      showError(
+        error instanceof Error ? error.message : "An unexpected error occurred",
+      );
+    }
+  });
+
+  elements.resetBtn?.addEventListener("click", resetForm);
+</script>
